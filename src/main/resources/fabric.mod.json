@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "pocketfps",
+  "version": "2.0.0",
+  "name": "PocketFPS 重制版",
+  "description": "智能性能优化引擎 - 四级降级策略，自动调度",
+  "authors": ["JinMo"],
+  "contact": {
+    "homepage": "",
+    "sources": ""
+  },
+  "license": "MIT",
+  "icon": "assets/pocketfps/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "com.jinmo.pocketfps.PocketFPS"
+    ]
+  },
+  "mixins": [
+    "pocketfps.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.0",
+    "fabric": "*",
+    "minecraft": "1.16.x",
+    "java": ">=8"
+  },
+  "suggests": {
+    "sodium": "*"
+  }
+}
