@@ -1,4 +1,3 @@
-# .github/workflows/build.yml
 name: build
 
 on: [pull_request, push]
@@ -11,20 +10,19 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v4
         
-      - name: validate gradle wrapper
-        uses: gradle/actions/wrapper-validation@v3
-        
-      - name: setup jdk
-        uses: actions/setup-java@v4
+      - name: setup jdk 17 (for gradle)
+        uses: actions/setup-java@v5
         with:
-          java-version: '8'
+          java-version: '17'
           distribution: 'temurin'
           
-      - name: make gradle wrapper executable
+      - name: make gradlew executable
         run: chmod +x ./gradlew
         
-      - name: build
-        run: ./gradlew build
+      - name: build with gradle (using java 17)
+        run: |
+          export JAVA_HOME=$JAVA_HOME_17_X64
+          ./gradlew build
         
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
