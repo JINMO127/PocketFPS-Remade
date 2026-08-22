@@ -20,7 +20,7 @@ jobs:
         run: chmod +x ./gradlew
         
       - name: build with gradle
-        run: ./gradlew build -Dorg.gradle.java.home=/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.xx
+        run: ./gradlew build
         
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
