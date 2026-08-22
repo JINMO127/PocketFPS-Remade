@@ -1,6 +1,7 @@
 package com.jinmo.pocketfps.lod.mixin;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +24,7 @@ public class RedstoneLimiterMixin {
         if (!PerformanceTuner.isLowPowerMode()) return;
         
         // 用距离缓存优化，避免每次都找玩家
-        var player = world.getClosestPlayer(pos.getX(), pos.getY(), pos.getZ(), maxDistance, false);
+        PlayerEntity player = world.getClosestPlayer(pos.getX(), pos.getY(), pos.getZ(), maxDistance, false);
         if (player == null) {
             ci.cancel();
         }
