@@ -74,8 +74,9 @@ public class FramePredictor {
         }
         
         try {
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, cachedFrameBuffer.fbo);
-            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, target.fbo);
+            // Use GL30 directly to bind framebuffers for compatibility
+            GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, cachedFrameBuffer.fbo);
+            GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, target.fbo);
             
             GL30.glBlitFramebuffer(
                 0, 0, cachedWidth, cachedHeight,
@@ -84,7 +85,7 @@ public class FramePredictor {
                 GL11.GL_NEAREST
             );
             
-            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.fbo);
+            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.fbo);
             return true;
         } catch (Exception e) {
             disable();
@@ -96,8 +97,8 @@ public class FramePredictor {
         if (!active || cachedFrameBuffer == null || cachedFrameBuffer.fbo == -1) return;
         
         try {
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, source.fbo);
-            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, cachedFrameBuffer.fbo);
+            GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, source.fbo);
+            GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, cachedFrameBuffer.fbo);
             
             GL30.glBlitFramebuffer(
                 0, 0, source.textureWidth, source.textureHeight,
@@ -106,7 +107,7 @@ public class FramePredictor {
                 GL11.GL_NEAREST
             );
             
-            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, source.fbo);
+            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, source.fbo);
         } catch (Exception e) {
             disable();
         }
