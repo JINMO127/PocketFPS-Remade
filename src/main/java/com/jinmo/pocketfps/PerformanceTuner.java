@@ -1,12 +1,10 @@
 package com.jinmo.pocketfps;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 public class PerformanceTuner {
-    public static final Logger LOGGER = LoggerFactory.getLogger("PocketFPS");
+    public static final Logger LOGGER = Logger.getLogger("PocketFPS");
     
     private static float smoothedFps = 60.0f;
     private static long lastFrameTime = 0;
@@ -45,9 +43,9 @@ public class PerformanceTuner {
     public static void setLowPowerMode(boolean active) {
         isLowPowerMode = active;
         if (active) {
-            LOGGER.info("⚡ 低功耗模式已激活 (FPS: {:.1f})", smoothedFps);
+            LOGGER.info(String.format("⚡ 低功耗模式已激活 (FPS: %.1f)", smoothedFps));
         } else {
-            LOGGER.info("✅ 低功耗模式已关闭 (FPS: {:.1f})", smoothedFps);
+            LOGGER.info(String.format("✅ 低功耗模式已关闭 (FPS: %.1f)", smoothedFps));
         }
     }
     
