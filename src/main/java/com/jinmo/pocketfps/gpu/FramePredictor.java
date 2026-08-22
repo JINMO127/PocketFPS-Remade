@@ -1,5 +1,6 @@
 package com.jinmo.pocketfps.gpu;
 
+import com.jinmo.pocketfps.PerformanceTuner;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -57,19 +58,23 @@ public class FramePredictor {
             return;
         }
         
-        // 检查尺寸变化
         int w = mainBuffer.textureWidth;
         int h = mainBuffer.textureHeight;
         if (cachedFrameBuffer == null || cachedWidth != w || cachedHeight != h) {
             initCache(w, h);
         }
         
-        // 决定是否跳过世界渲染（只在有缓存时跳）
         shouldSkipWorldRender = cachedFrameBuffer != null && cachedFrameBuffer.fbo != -1;
     }
     
     public static boolean blitCachedFrame(Framebuffer target) {
         if (!active || cachedFrameBuffer == null || cachedFrameBuffer.fbo == -1) {
+            return false;
+        }
+        
+        if (!isGLContextValid()) {
+            PerformanceTuner.LOGGER.warn("FramePredictor: OpenGL 上下文无效，已禁用");
+            disable();
             return false;
         }
         
@@ -87,6 +92,7 @@ public class FramePredictor {
             GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.fbo);
             return true;
         } catch (Exception e) {
+            PerformanceTuner.LOGGER.warn("FramePredictor blit 失败，已禁用", e);
             disable();
             return false;
         }
@@ -94,6 +100,12 @@ public class FramePredictor {
     
     public static void captureFrame(Framebuffer source) {
         if (!active || cachedFrameBuffer == null || cachedFrameBuffer.fbo == -1) return;
+        
+        if (!isGLContextValid()) {
+            PerformanceTuner.LOGGER.warn("FramePredictor: OpenGL 上下文无效，已禁用");
+            disable();
+            return;
+        }
         
         try {
             GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, source.fbo);
@@ -108,6 +120,7 @@ public class FramePredictor {
             
             GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, source.fbo);
         } catch (Exception e) {
+            PerformanceTuner.LOGGER.warn("FramePredictor capture 失败，已禁用", e);
             disable();
         }
     }
@@ -127,9 +140,25 @@ public class FramePredictor {
             } catch (Exception ignored) {}
             cachedFrameBuffer = null;
         }
-        cachedFrameBuffer = new Framebuffer(width, height, true, MinecraftClient.IS_SYSTEM_MAC);
-        cachedFrameBuffer.setClearColor(0, 0, 0, 0);
-        cachedWidth = width;
-        cachedHeight = height;
+        
+        try {
+            boolean isMac = MinecraftClient.IS_SYSTEM_MAC;
+            cachedFrameBuffer = new Framebuffer(width, height, true, isMac);
+            cachedFrameBuffer.setClearColor(0, 0, 0, 0);
+            cachedWidth = width;
+            cachedHeight = height;
+        } catch (Exception e) {
+            PerformanceTuner.LOGGER.warn("FramePredictor 缓存创建失败", e);
+            disable();
+        }
+    }
+    
+    private static boolean isGLContextValid() {
+        try {
+            int error = GL11.glGetError();
+            return error == GL11.GL_NO_ERROR || error >= 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

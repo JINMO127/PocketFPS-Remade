@@ -2,18 +2,23 @@ package com.jinmo.pocketfps;
 
 import com.jinmo.pocketfps.gpu.FramePredictor;
 import com.jinmo.pocketfps.lod.EntityLODManager;
+import com.jinmo.pocketfps.lod.mixin.ChunkUpdateThrottlerMixin;
+import com.jinmo.pocketfps.lod.mixin.RedstoneLimiterMixin;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PerformanceScheduler {
+    private static final Logger LOGGER = LoggerFactory.getLogger("PocketFPS-Scheduler");
     private static int tickCounter = 0;
     private static OptimizationLevel currentLevel = OptimizationLevel.OFF;
     
+    private static int originalViewDistance = -1;
+    private static boolean viewDistanceChanged = false;
+    
     public enum OptimizationLevel {
-        OFF,      // 原版
-        LIGHT,    // 轻度
-        MEDIUM,   // 中度
-        HEAVY     // 重度
+        OFF, LIGHT, MEDIUM, HEAVY
     }
     
     public static void register() {
@@ -24,7 +29,11 @@ public class PerformanceScheduler {
             }
             
             tickCounter++;
-            if (tickCounter % 10 != 0) return; // 每10tick检查一次
+            if (tickCounter % 10 != 0) return;
+            
+            if (tickCounter % 100 == 0) {
+                EntityLODManager.tickCleanup();
+            }
             
             float fps = PerformanceTuner.getSmoothedFps();
             boolean lowPower = PerformanceTuner.isLowPowerMode();
@@ -36,58 +45,69 @@ public class PerformanceScheduler {
                 return;
             }
             
-            // ✅ 四级降级策略
+            ConfigManager.Config config = ConfigManager.get();
             OptimizationLevel targetLevel;
-            if (fps < 10) {
+            if (fps < config.heavyFpsThreshold) {
                 targetLevel = OptimizationLevel.HEAVY;
-            } else if (fps < 18) {
-                targetLevel = OptimizationLevel.HEAVY;
-            } else if (fps < 25) {
+            } else if (fps < config.mediumFpsThreshold) {
                 targetLevel = OptimizationLevel.MEDIUM;
-            } else if (fps < 40) {
+            } else if (fps < config.lightFpsThreshold) {
                 targetLevel = OptimizationLevel.LIGHT;
             } else {
                 targetLevel = OptimizationLevel.OFF;
             }
             
-            // 避免频繁切换
             if (targetLevel == currentLevel) return;
             currentLevel = targetLevel;
             
-            // 执行降级
             applyLevel(targetLevel, fps);
         });
     }
     
     private static void applyLevel(OptimizationLevel level, float fps) {
         MinecraftClient client = MinecraftClient.getInstance();
+        ConfigManager.Config config = ConfigManager.get();
+        
+        if (!viewDistanceChanged) {
+            originalViewDistance = client.options.viewDistance;
+            viewDistanceChanged = true;
+        }
         
         switch (level) {
             case LIGHT:
-                // 轻度：降低视距 + 限制红石
-                client.options.viewDistance = Math.min(client.options.viewDistance, 8);
-                EntityLODManager.setFreezeDistance(48);
-                RedstoneLimiterMixin.setMaxDistance(64);
-                LOGGER.info("🟢 轻度优化 (FPS: {:.1f})", fps);
+                client.options.viewDistance = Math.min(originalViewDistance, 8);
+                EntityLODManager.setFreezeDistance(config.freezeDistanceLight);
+                if (PocketFPSCommand.isRedstoneEnabled()) {
+                    RedstoneLimiterMixin.setMaxDistance(config.redstoneDistanceLight);
+                }
+                LOGGER.info("🟢 轻度优化 (FPS: {})", fps);
                 break;
                 
             case MEDIUM:
-                // 中度：实体冻结 + 区块节流
-                client.options.viewDistance = Math.min(client.options.viewDistance, 4);
-                EntityLODManager.setFreezeDistance(32);
-                RedstoneLimiterMixin.setMaxDistance(32);
-                ChunkUpdateThrottlerMixin.setThrottleRate(3);
-                LOGGER.info("🟡 中度优化 (FPS: {:.1f})", fps);
+                client.options.viewDistance = Math.min(originalViewDistance, 4);
+                EntityLODManager.setFreezeDistance(config.freezeDistanceMedium);
+                if (PocketFPSCommand.isRedstoneEnabled()) {
+                    RedstoneLimiterMixin.setMaxDistance(config.redstoneDistanceMedium);
+                }
+                if (PocketFPSCommand.isThrottlerEnabled()) {
+                    ChunkUpdateThrottlerMixin.setThrottleRate(config.chunkThrottleMedium);
+                }
+                LOGGER.info("🟡 中度优化 (FPS: {})", fps);
                 break;
                 
             case HEAVY:
-                // 重度：帧预测 + 激进冻结
-                client.options.viewDistance = Math.min(client.options.viewDistance, 2);
-                EntityLODManager.setFreezeDistance(16);
-                RedstoneLimiterMixin.setMaxDistance(16);
-                ChunkUpdateThrottlerMixin.setThrottleRate(5);
-                FramePredictor.enable(true);
-                LOGGER.info("🔴 重度优化 (FPS: {:.1f}) - 帧预测已激活", fps);
+                client.options.viewDistance = Math.min(originalViewDistance, 2);
+                EntityLODManager.setFreezeDistance(config.freezeDistanceHeavy);
+                if (PocketFPSCommand.isRedstoneEnabled()) {
+                    RedstoneLimiterMixin.setMaxDistance(config.redstoneDistanceHeavy);
+                }
+                if (PocketFPSCommand.isThrottlerEnabled()) {
+                    ChunkUpdateThrottlerMixin.setThrottleRate(config.chunkThrottleHeavy);
+                }
+                if (PocketFPSCommand.isPredictorEnabled()) {
+                    FramePredictor.enable(true);
+                }
+                LOGGER.info("🔴 重度优化 (FPS: {}) - 帧预测已激活", fps);
                 break;
                 
             default:
@@ -96,16 +116,18 @@ public class PerformanceScheduler {
         }
     }
     
-    private static void restoreAll() {
+    public static void restoreAll() {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world != null && client.player != null) {
-            // 只恢复被改过的值
-            if (client.options.viewDistance < 12) {
-                client.options.viewDistance = 12;
-            }
+        
+        if (viewDistanceChanged && originalViewDistance != -1) {
+            client.options.viewDistance = originalViewDistance;
+            viewDistanceChanged = false;
         }
+        
+        // ✅ 删除了重复的视距恢复逻辑（第 69-73 行）
+        
         EntityLODManager.clearCache();
-        RedstoneLimiterMixin.setMaxDistance(-1); // 无限制
+        RedstoneLimiterMixin.setMaxDistance(-1);
         ChunkUpdateThrottlerMixin.setThrottleRate(1);
         FramePredictor.disable();
         currentLevel = OptimizationLevel.OFF;

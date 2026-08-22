@@ -3,7 +3,6 @@ package com.jinmo.pocketfps.lod;
 import com.jinmo.pocketfps.PerformanceTuner;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.*;
@@ -16,9 +15,8 @@ public class PathMerger {
     private static int cleanupCounter = 0;
 
     public static void mergePathIfNeeded(MobEntity mob) {
-        if (mob.world == null || !mob.isAlive()) return;
+        if (mob == null || mob.world == null || !mob.isAlive()) return;
         if (!PerformanceTuner.isLowPowerMode()) return;
-
         if (EntityLODManager.isFrozen(mob)) return;
 
         LivingEntity target = mob.getTarget();
@@ -31,26 +29,29 @@ public class PathMerger {
 
         cleanupCounter++;
         if (cleanupCounter % 10 == 0) {
-            mobs.removeIf(m -> !m.isAlive() || m.removed);
+            mobs.removeIf(m -> m == null || !m.isAlive() || m.removed);
             if (mobs.isEmpty()) {
                 targetMap.remove(targetUuid);
                 mobs = targetMap.computeIfAbsent(targetUuid, k -> new ArrayList<>());
             }
         }
 
+        // ✅ 只改这里：同种类型检查，不再限定僵尸
         if (!mobs.isEmpty()) {
             MobEntity first = mobs.get(0);
-            if (!(first instanceof ZombieEntity && mob instanceof ZombieEntity)) {
+            if (first == null) return;
+            if (first.getType() != mob.getType()) {
                 return;
             }
         }
         mobs.add(mob);
 
         if (mobs.size() >= 3) {
-            mobs.removeIf(m -> !m.isAlive() || m.removed);
+            mobs.removeIf(m -> m == null || !m.isAlive() || m.removed);
             if (mobs.size() < 3) return;
 
             MobEntity leader = mobs.get(0);
+            if (leader == null) return;
             if (mob == leader) return;
 
             long currentTick = mob.world.getTime();
@@ -69,12 +70,14 @@ public class PathMerger {
             Vec3d offset = cachedOffset.get(mobUuid);
             if (offset == null) offset = Vec3d.ZERO;
 
-            mob.getNavigation().startMovingTo(
-                    leader.getX() + offset.x,
-                    leader.getY(),
-                    leader.getZ() + offset.z,
-                    1.0
-            );
+            if (mob.getNavigation() != null) {
+                mob.getNavigation().startMovingTo(
+                        leader.getX() + offset.x,
+                        leader.getY(),
+                        leader.getZ() + offset.z,
+                        1.0
+                );
+            }
         }
     }
 

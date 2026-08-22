@@ -41,7 +41,6 @@ public class EntityLODManager {
         frozenMobs.remove(uuid);
         mob.setAiDisabled(false);
         mob.setInvisible(false);
-        // 解冻时清理路径合并缓存
         PathMerger.cleanupTargetMaps(mob);
     }
 
@@ -55,8 +54,11 @@ public class EntityLODManager {
 
     public static void tickCleanup() {
         long now = System.currentTimeMillis();
-        frozenMobs.entrySet().removeIf(entry -> {
-            return now - entry.getValue() > 30000;
-        });
+        frozenMobs.entrySet().removeIf(entry -> now - entry.getValue() > 30000);
+    }
+    
+    // 新增：用于命令显示
+    public static int getFrozenCount() {
+        return frozenMobs.size();
     }
 }

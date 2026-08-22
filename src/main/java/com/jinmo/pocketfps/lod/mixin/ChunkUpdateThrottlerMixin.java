@@ -1,5 +1,7 @@
-package com.jinmo.pocketfps;
+package com.jinmo.pocketfps.lod.mixin;
 
+import com.jinmo.pocketfps.PerformanceTuner;
+import com.jinmo.pocketfps.PocketFPSCommand;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
@@ -18,6 +20,8 @@ public class ChunkUpdateThrottlerMixin {
     @Inject(method = "scheduleChunkRender", at = @At("HEAD"), cancellable = true)
     private void onScheduleChunkRender(int chunkX, int chunkZ, boolean important, CallbackInfo ci) {
         if (!PerformanceTuner.isLowPowerMode() || throttleRate <= 1) return;
+        // ✅ 新增：检查区块更新节流是否启用
+        if (!PocketFPSCommand.isThrottlerEnabled()) return;
         
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null || client.player == null) return;
@@ -39,8 +43,8 @@ public class ChunkUpdateThrottlerMixin {
         if (rate <= 1) return;
         
         long gameTime = client.world.getTime();
-        long hash = Math.abs(chunkX * 7L + chunkZ * 13L);
-        if ((gameTime + hash) % rate != 0) {
+        long seed = Math.abs(chunkX * 7L + chunkZ * 13L);
+        if ((gameTime + seed) % rate != 0) {
             ci.cancel();
         }
     }

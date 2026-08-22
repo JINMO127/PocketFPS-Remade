@@ -1,4 +1,4 @@
-package com.jinmo.pocketfps.gpu;
+package com.jinmo.pocketfps.gpu.mixin;
 
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.GameRenderer;
@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import com.jinmo.pocketfps.gpu.FramePredictor;
 
 @Mixin(GameRenderer.class)
 public class FramePredictorMixin {

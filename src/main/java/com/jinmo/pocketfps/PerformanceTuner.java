@@ -13,8 +13,10 @@ public class PerformanceTuner {
     private static boolean isLowPowerMode = false;
     private static boolean forcedByPlayer = false;
     
+    private static boolean smoothingEnabled = true;
+    private static float smoothingFactor = 0.9f;
+    
     public static void register() {
-        // ✅ 用 RenderTick 计算真实帧率（与 Tick 解耦）
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             updateFps();
         });
@@ -30,7 +32,11 @@ public class PerformanceTuner {
         lastFrameTime = now;
         if (delta > 0.001f && delta < 1.0f) {
             float currentFps = 1.0f / delta;
-            smoothedFps = smoothedFps * 0.9f + currentFps * 0.1f;
+            if (smoothingEnabled) {
+                smoothedFps = smoothedFps * smoothingFactor + currentFps * (1.0f - smoothingFactor);
+            } else {
+                smoothedFps = currentFps;
+            }
         }
     }
     
@@ -45,9 +51,9 @@ public class PerformanceTuner {
     public static void setLowPowerMode(boolean active) {
         isLowPowerMode = active;
         if (active) {
-            LOGGER.info("⚡ 低功耗模式已激活 (FPS: {:.1f})", smoothedFps);
+            LOGGER.info("⚡ 低功耗模式已激活 (FPS: {})", smoothedFps);
         } else {
-            LOGGER.info("✅ 低功耗模式已关闭 (FPS: {:.1f})", smoothedFps);
+            LOGGER.info("✅ 低功耗模式已关闭 (FPS: {})", smoothedFps);
         }
     }
     
@@ -60,5 +66,13 @@ public class PerformanceTuner {
     
     public static boolean isForcedByPlayer() {
         return forcedByPlayer;
+    }
+    
+    public static void setSmoothingEnabled(boolean enabled) {
+        smoothingEnabled = enabled;
+    }
+    
+    public static void setSmoothingFactor(float factor) {
+        smoothingFactor = Math.max(0.1f, Math.min(0.99f, factor));
     }
 }

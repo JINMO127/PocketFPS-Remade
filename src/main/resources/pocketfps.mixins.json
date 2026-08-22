@@ -3,7 +3,10 @@
   "package": "com.jinmo.pocketfps",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "gpu.mixin.FramePredictorMixin",
+    {
+      "target": "gpu.mixin.FramePredictorMixin",
+      "priority": 1500
+    },
     "lod.mixin.EntityAIBlockerMixin",
     "lod.mixin.ChunkUpdateThrottlerMixin",
     "lod.mixin.RedstoneLimiterMixin"

@@ -1,5 +1,7 @@
-package com.jinmo.pocketfps;
+package com.jinmo.pocketfps.lod.mixin;
 
+import com.jinmo.pocketfps.PerformanceTuner;
+import com.jinmo.pocketfps.PocketFPSCommand;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -21,9 +23,10 @@ public class RedstoneLimiterMixin {
         if (!world.isClient) return;
         if (maxDistance <= 0) return;
         if (!PerformanceTuner.isLowPowerMode()) return;
+        // ✅ 新增：检查红石限制是否启用
+        if (!PocketFPSCommand.isRedstoneEnabled()) return;
         
-        // 用距离缓存优化，避免每次都找玩家
-        var player = world.getClosestPlayer(pos.getX(), pos.getY(), pos.getZ(), maxDistance, false);
+        net.minecraft.entity.player.PlayerEntity player = world.getClosestPlayer(pos.getX(), pos.getY(), pos.getZ(), maxDistance, false);
         if (player == null) {
             ci.cancel();
         }
