@@ -68,7 +68,7 @@ public class PerformanceScheduler {
                 client.options.viewDistance = Math.min(client.options.viewDistance, 8);
                 EntityLODManager.setFreezeDistance(48);
                 RedstoneLimiterMixin.setMaxDistance(64);
-                LOGGER.info("🟢 轻度优化 (FPS: {:.1f})", fps);
+                PerformanceTuner.LOGGER.info("🟢 轻度优化 (FPS: {})", String.format("%.1f", fps));
                 break;
                 
             case MEDIUM:
@@ -77,7 +77,7 @@ public class PerformanceScheduler {
                 EntityLODManager.setFreezeDistance(32);
                 RedstoneLimiterMixin.setMaxDistance(32);
                 ChunkUpdateThrottlerMixin.setThrottleRate(3);
-                LOGGER.info("🟡 中度优化 (FPS: {:.1f})", fps);
+                PerformanceTuner.LOGGER.info("🟡 中度优化 (FPS: {})", String.format("%.1f", fps));
                 break;
                 
             case HEAVY:
@@ -87,7 +87,7 @@ public class PerformanceScheduler {
                 RedstoneLimiterMixin.setMaxDistance(16);
                 ChunkUpdateThrottlerMixin.setThrottleRate(5);
                 FramePredictor.enable(true);
-                LOGGER.info("🔴 重度优化 (FPS: {:.1f}) - 帧预测已激活", fps);
+                PerformanceTuner.LOGGER.info("🔴 重度优化 (FPS: {}) - 帧预测已激活", String.format("%.1f", fps));
                 break;
                 
             default:
@@ -109,7 +109,7 @@ public class PerformanceScheduler {
         ChunkUpdateThrottlerMixin.setThrottleRate(1);
         FramePredictor.disable();
         currentLevel = OptimizationLevel.OFF;
-        LOGGER.info("✅ 所有优化已恢复");
+        PerformanceTuner.LOGGER.info("✅ 所有优化已恢复");
     }
     
     public static OptimizationLevel getCurrentLevel() {
