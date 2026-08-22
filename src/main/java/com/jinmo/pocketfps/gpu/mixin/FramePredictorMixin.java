@@ -1,4 +1,4 @@
-package com.jinmo.pocketfps.gpu;
+package com.jinmo.pocketfps.gpu.mixin;
 
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.GameRenderer;

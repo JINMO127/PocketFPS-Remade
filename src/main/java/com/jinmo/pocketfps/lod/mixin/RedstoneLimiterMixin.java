@@ -1,4 +1,4 @@
-package com.jinmo.pocketfps;
+package com.jinmo.pocketfps.lod.mixin;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
