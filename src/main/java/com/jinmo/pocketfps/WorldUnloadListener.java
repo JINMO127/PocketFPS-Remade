@@ -3,16 +3,11 @@ package com.jinmo.pocketfps;
 import com.jinmo.pocketfps.gpu.FramePredictor;
 import com.jinmo.pocketfps.lod.EntityLODManager;
 import com.jinmo.pocketfps.lod.PathMerger;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 
 public class WorldUnloadListener {
     public static void register() {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            clearAllCaches();
-            restorePerformanceSettings();
-        });
-        ClientLifecycleEvents.CLIENT_STOPPED.register(client -> {
             clearAllCaches();
             restorePerformanceSettings();
         });
