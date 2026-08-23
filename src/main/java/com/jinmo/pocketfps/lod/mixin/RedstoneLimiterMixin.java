@@ -23,7 +23,6 @@ public class RedstoneLimiterMixin {
         if (!world.isClient) return;
         if (maxDistance <= 0) return;
         if (!PerformanceTuner.isLowPowerMode()) return;
-        // ✅ 新增：检查红石限制是否启用
         if (!PocketFPSCommand.isRedstoneEnabled()) return;
         
         net.minecraft.entity.player.PlayerEntity player = world.getClosestPlayer(pos.getX(), pos.getY(), pos.getZ(), maxDistance, false);
@@ -32,7 +31,8 @@ public class RedstoneLimiterMixin {
         }
     }
     
-    private static void setMaxDistance(int distance) {
+    @Unique
+    public static void setMaxDistance(int distance) {
         maxDistance = distance;
     }
 }
