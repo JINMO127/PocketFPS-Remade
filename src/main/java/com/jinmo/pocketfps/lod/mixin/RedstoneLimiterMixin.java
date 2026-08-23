@@ -32,7 +32,7 @@ public class RedstoneLimiterMixin {
         }
     }
     
-    public static void setMaxDistance(int distance) {
+    private static void setMaxDistance(int distance) {
         maxDistance = distance;
     }
 }
