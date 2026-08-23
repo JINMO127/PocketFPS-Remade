@@ -23,7 +23,7 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    implementation 'org.slf4j:slf4j-api:1.7.36"
+    implementation "org.slf4j:slf4j-api:1.7.36"
 }
 
 processResources {
