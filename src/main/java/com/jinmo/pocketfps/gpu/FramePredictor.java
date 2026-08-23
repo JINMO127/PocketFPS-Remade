@@ -1,7 +1,6 @@
 package com.jinmo.pocketfps.gpu;
 
 import com.jinmo.pocketfps.PerformanceTuner;
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import org.lwjgl.opengl.GL11;
@@ -79,8 +78,9 @@ public class FramePredictor {
         }
         
         try {
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, cachedFrameBuffer.fbo);
-            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, target.fbo);
+            // ✅ 修复：使用 GL30 直接调用而不是 GlStateManager._glBindFramebuffer
+            GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, cachedFrameBuffer.fbo);
+            GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, target.fbo);
             
             GL30.glBlitFramebuffer(
                 0, 0, cachedWidth, cachedHeight,
@@ -89,7 +89,7 @@ public class FramePredictor {
                 GL11.GL_NEAREST
             );
             
-            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.fbo);
+            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.fbo);
             return true;
         } catch (Exception e) {
             PerformanceTuner.LOGGER.warn("FramePredictor blit 失败，已禁用", e);
@@ -108,8 +108,9 @@ public class FramePredictor {
         }
         
         try {
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, source.fbo);
-            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, cachedFrameBuffer.fbo);
+            // ✅ 修复：使用 GL30 直接调用而不是 GlStateManager._glBindFramebuffer
+            GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, source.fbo);
+            GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, cachedFrameBuffer.fbo);
             
             GL30.glBlitFramebuffer(
                 0, 0, source.textureWidth, source.textureHeight,
@@ -118,7 +119,7 @@ public class FramePredictor {
                 GL11.GL_NEAREST
             );
             
-            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, source.fbo);
+            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, source.fbo);
         } catch (Exception e) {
             PerformanceTuner.LOGGER.warn("FramePredictor capture 失败，已禁用", e);
             disable();

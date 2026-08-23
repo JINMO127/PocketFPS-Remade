@@ -4,7 +4,6 @@ import com.jinmo.pocketfps.gpu.FramePredictor;
 import com.jinmo.pocketfps.lod.EntityLODManager;
 import com.jinmo.pocketfps.lod.mixin.ChunkUpdateThrottlerMixin;
 import com.jinmo.pocketfps.lod.mixin.RedstoneLimiterMixin;
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
@@ -20,9 +19,8 @@ public class PocketFPSCommand {
     private static boolean entityFreezeEnabled = true;
     
     public static void register() {
-        CommandDispatcher<FabricClientCommandSource> dispatcher = ClientCommandManager.getDispatcher();
-        
-        dispatcher.register(literal("pocketfps")
+        // ✅ 修复：直接使用 ClientCommandManager.DISPATCHER 而不是 getDispatcher()
+        ClientCommandManager.DISPATCHER.register(literal("pocketfps")
             .executes(context -> {
                 sendStatus(context.getSource());
                 return 1;
