@@ -11,12 +11,6 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
-    maven {
-        url = 'https://maven.aliyun.com/repository/public'
-    }
-    maven {
-        url = 'https://maven.aliyun.com/repository/fabric'
-    }
     mavenCentral()
     maven {
         name = 'Fabric'
@@ -29,13 +23,6 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-}
-
-// ✅ 新增：Mixin 配置
-loom {
-    mixin {
-        defaultRefmapName = "pocketfps-refmap.json"
-    }
 }
 
 processResources {
@@ -55,7 +42,7 @@ java {
 
 jar {
     from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
+        rename { "${it}_${project.archivesBaseName}"}
     }
 }
 
