@@ -5,7 +5,7 @@ import com.jinmo.pocketfps.lod.EntityLODManager;
 import com.jinmo.pocketfps.lod.mixin.ChunkUpdateThrottlerMixin;
 import com.jinmo.pocketfps.lod.mixin.RedstoneLimiterMixin;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.class_310;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ public class PerformanceScheduler {
     
     public static void register() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.world == null || client.player == null) {
+            if (client.field_1687 == null || client.field_1724 == null) {
                 restoreAll();
                 return;
             }
@@ -65,29 +65,29 @@ public class PerformanceScheduler {
     }
     
     private static void applyLevel(OptimizationLevel level, float fps) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        class_310 client = class_310.method_1551();
         ConfigManager.Config config = ConfigManager.get();
         
         if (!viewDistanceChanged) {
-            originalViewDistance = client.options.viewDistance;
+            originalViewDistance = client.field_1690.field_1870;
             viewDistanceChanged = true;
         }
         
         switch (level) {
             case LIGHT:
-                client.options.viewDistance = Math.min(originalViewDistance, 8);
+                client.field_1690.field_1870 = Math.min(originalViewDistance, 8);
                 EntityLODManager.setFreezeDistance(config.freezeDistanceLight);
                 if (PocketFPSCommand.isRedstoneEnabled()) {
-                    RedstoneLimiterMixin.setMaxDistance(config.redstoneDistanceLight);
+                    RedstoneLimiterMixin.setRedstoneLimit(config.redstoneDistanceLight);
                 }
                 LOGGER.info("🟢 轻度优化 (FPS: {})", fps);
                 break;
                 
             case MEDIUM:
-                client.options.viewDistance = Math.min(originalViewDistance, 4);
+                client.field_1690.field_1870 = Math.min(originalViewDistance, 4);
                 EntityLODManager.setFreezeDistance(config.freezeDistanceMedium);
                 if (PocketFPSCommand.isRedstoneEnabled()) {
-                    RedstoneLimiterMixin.setMaxDistance(config.redstoneDistanceMedium);
+                    RedstoneLimiterMixin.setRedstoneLimit(config.redstoneDistanceMedium);
                 }
                 if (PocketFPSCommand.isThrottlerEnabled()) {
                     ChunkUpdateThrottlerMixin.setThrottleRate(config.chunkThrottleMedium);
@@ -96,10 +96,10 @@ public class PerformanceScheduler {
                 break;
                 
             case HEAVY:
-                client.options.viewDistance = Math.min(originalViewDistance, 2);
+                client.field_1690.field_1870 = Math.min(originalViewDistance, 2);
                 EntityLODManager.setFreezeDistance(config.freezeDistanceHeavy);
                 if (PocketFPSCommand.isRedstoneEnabled()) {
-                    RedstoneLimiterMixin.setMaxDistance(config.redstoneDistanceHeavy);
+                    RedstoneLimiterMixin.setRedstoneLimit(config.redstoneDistanceHeavy);
                 }
                 if (PocketFPSCommand.isThrottlerEnabled()) {
                     ChunkUpdateThrottlerMixin.setThrottleRate(config.chunkThrottleHeavy);
@@ -117,17 +117,15 @@ public class PerformanceScheduler {
     }
     
     public static void restoreAll() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        class_310 client = class_310.method_1551();
         
         if (viewDistanceChanged && originalViewDistance != -1) {
-            client.options.viewDistance = originalViewDistance;
+            client.field_1690.field_1870 = originalViewDistance;
             viewDistanceChanged = false;
         }
         
-        // ✅ 删除了重复的视距恢复逻辑（第 69-73 行）
-        
         EntityLODManager.clearCache();
-        RedstoneLimiterMixin.setMaxDistance(-1);
+        RedstoneLimiterMixin.setRedstoneLimit(-1);
         ChunkUpdateThrottlerMixin.setThrottleRate(1);
         FramePredictor.disable();
         currentLevel = OptimizationLevel.OFF;
