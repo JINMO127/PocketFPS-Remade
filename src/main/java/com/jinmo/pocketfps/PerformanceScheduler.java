@@ -5,7 +5,7 @@ import com.jinmo.pocketfps.lod.EntityLODManager;
 import com.jinmo.pocketfps.lod.mixin.ChunkUpdateThrottlerMixin;
 import com.jinmo.pocketfps.lod.mixin.RedstoneLimiterMixin;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.class_310;
+import net.minecraft.client.MinecraftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ public class PerformanceScheduler {
     
     public static void register() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.field_1687 == null || client.field_1724 == null) {
+            if (client.world == null || client.player == null) {
                 restoreAll();
                 return;
             }
@@ -65,17 +65,17 @@ public class PerformanceScheduler {
     }
     
     private static void applyLevel(OptimizationLevel level, float fps) {
-        class_310 client = class_310.method_1551();
+        MinecraftClient client = MinecraftClient.getInstance();
         ConfigManager.Config config = ConfigManager.get();
         
         if (!viewDistanceChanged) {
-            originalViewDistance = client.field_1690.field_1870;
+            originalViewDistance = client.options.viewDistance;
             viewDistanceChanged = true;
         }
         
         switch (level) {
             case LIGHT:
-                client.field_1690.field_1870 = Math.min(originalViewDistance, 8);
+                client.options.viewDistance = Math.min(originalViewDistance, 8);
                 EntityLODManager.setFreezeDistance(config.freezeDistanceLight);
                 if (PocketFPSCommand.isRedstoneEnabled()) {
                     RedstoneLimiterMixin.setRedstoneLimit(config.redstoneDistanceLight);
@@ -84,7 +84,7 @@ public class PerformanceScheduler {
                 break;
                 
             case MEDIUM:
-                client.field_1690.field_1870 = Math.min(originalViewDistance, 4);
+                client.options.viewDistance = Math.min(originalViewDistance, 4);
                 EntityLODManager.setFreezeDistance(config.freezeDistanceMedium);
                 if (PocketFPSCommand.isRedstoneEnabled()) {
                     RedstoneLimiterMixin.setRedstoneLimit(config.redstoneDistanceMedium);
@@ -96,7 +96,7 @@ public class PerformanceScheduler {
                 break;
                 
             case HEAVY:
-                client.field_1690.field_1870 = Math.min(originalViewDistance, 2);
+                client.options.viewDistance = Math.min(originalViewDistance, 2);
                 EntityLODManager.setFreezeDistance(config.freezeDistanceHeavy);
                 if (PocketFPSCommand.isRedstoneEnabled()) {
                     RedstoneLimiterMixin.setRedstoneLimit(config.redstoneDistanceHeavy);
@@ -117,10 +117,10 @@ public class PerformanceScheduler {
     }
     
     public static void restoreAll() {
-        class_310 client = class_310.method_1551();
+        MinecraftClient client = MinecraftClient.getInstance();
         
         if (viewDistanceChanged && originalViewDistance != -1) {
-            client.field_1690.field_1870 = originalViewDistance;
+            client.options.viewDistance = originalViewDistance;
             viewDistanceChanged = false;
         }
         
