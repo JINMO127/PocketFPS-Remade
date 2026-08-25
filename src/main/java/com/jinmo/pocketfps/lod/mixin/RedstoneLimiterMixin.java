@@ -2,41 +2,37 @@ package com.jinmo.pocketfps.lod.mixin;
 
 import com.jinmo.pocketfps.PerformanceTuner;
 import com.jinmo.pocketfps.PocketFPSCommand;
-import net.minecraft.block.Block;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.class_1937;
+import net.minecraft.class_2248;
+import net.minecraft.class_2338;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(World.class)
+@Mixin(class_1937.class)
 public class RedstoneLimiterMixin {
 
     @Unique
     private static int maxDistance = -1;
 
+    // ✅ 注入还在，但方法体是空的（功能被禁用）
     @Inject(method = "updateNeighborsAlways", at = @At("HEAD"), cancellable = true)
-    private void onUpdateNeighbors(BlockPos pos, Block sourceBlock, CallbackInfo ci) {
-        World world = (World) (Object) this;
-        if (world.isClient) return;
-        if (maxDistance <= 0) return;
-        if (!PerformanceTuner.isLowPowerMode()) return;
-        if (!PocketFPSCommand.isRedstoneEnabled()) return;
-
-        net.minecraft.entity.player.PlayerEntity player = world.getClosestPlayer(pos.getX(), pos.getY(), pos.getZ(), maxDistance, false);
-        if (player == null) {
-            ci.cancel();
-        }
+    private void onUpdateNeighbors(class_2338 pos, class_2248 sourceBlock, CallbackInfo ci) {
+        // 什么都不做，让红石更新正常进行
+        // 相当于这个功能被“关闭”了
     }
 
     @Unique
     private static void setMaxDistance(int distance) {
-        maxDistance = distance;
+        // 什么都不做，只是接收调用
     }
 
-    public static void setRedstoneLimit(int distance) {
-        setMaxDistance(distance);
+    // ✅ 对外暴露的 API，供 PocketFPSCommand 和 PerformanceScheduler 调用
+    public static class Api {
+        public static void setRedstoneLimit(int distance) {
+            // 什么都不做，避免崩溃
+        }
     }
 }
