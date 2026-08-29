@@ -55,11 +55,11 @@ public class ConfigManager {
         public boolean showHUDIndicator = true;
         public boolean enableFpsSmoothing = true;
         public float fpsSmoothingFactor = 0.9f;
-        // 新增：功能开关
         public boolean predictorEnabled = true;
         public boolean throttlerEnabled = true;
         public boolean redstoneEnabled = true;
         public boolean entityFreezeEnabled = true;
+        public boolean particleThrottlerEnabled = true;  // 粒子节流开关
     }
     
     private static Config load() {
@@ -84,7 +84,6 @@ public class ConfigManager {
         }
     }
     
-    // 新增：公开保存方法
     public static void saveConfig() {
         save(INSTANCE);
     }
@@ -98,11 +97,11 @@ public class ConfigManager {
         PerformanceTuner.setSmoothingEnabled(INSTANCE.enableFpsSmoothing);
         PerformanceTuner.setSmoothingFactor(INSTANCE.fpsSmoothingFactor);
         
-        // 从配置文件恢复开关状态（不触发保存）
         PocketFPSCommand.setPredictorEnabled(INSTANCE.predictorEnabled, false);
         PocketFPSCommand.setThrottlerEnabled(INSTANCE.throttlerEnabled, false);
         PocketFPSCommand.setRedstoneEnabled(INSTANCE.redstoneEnabled, false);
         PocketFPSCommand.setEntityFreezeEnabled(INSTANCE.entityFreezeEnabled, false);
+        PocketFPSCommand.setParticleThrottlerEnabled(INSTANCE.particleThrottlerEnabled, false);
         
         PerformanceTuner.LOGGER.info("✅ 配置已重新加载");
     }

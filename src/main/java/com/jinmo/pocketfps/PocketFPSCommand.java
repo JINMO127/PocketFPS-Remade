@@ -2,8 +2,9 @@ package com.jinmo.pocketfps;
 
 import com.jinmo.pocketfps.gpu.FramePredictor;
 import com.jinmo.pocketfps.lod.EntityLODManager;
-import com.jinmo.pocketfps.lod.mixin.ChunkUpdateThrottlerMixin;
-import com.jinmo.pocketfps.lod.mixin.RedstoneLimiterMixin;
+import com.jinmo.pocketfps.mixin.RedstoneHelper;
+import com.jinmo.pocketfps.mixin.ChunkUpdateThrottlerMixin;
+import com.jinmo.pocketfps.particle.ParticleThrottler;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
@@ -12,19 +13,20 @@ import net.minecraft.text.LiteralText;
 import static net.fabricmc.fabric.api.client.command.v1.ClientCommandManager.literal;
 
 public class PocketFPSCommand {
-    
+
     private static boolean predictorEnabled = true;
     private static boolean throttlerEnabled = true;
     private static boolean redstoneEnabled = true;
     private static boolean entityFreezeEnabled = true;
-    
+    private static boolean particleThrottlerEnabled = true;
+
     public static void register() {
         ClientCommandManager.DISPATCHER.register(literal("pocketfps")
             .executes(context -> {
                 sendStatus(context.getSource());
                 return 1;
             })
-            
+
             .then(literal("predictor")
                 .then(ClientCommandManager.argument("enabled", BoolArgumentType.bool())
                     .executes(context -> {
@@ -44,7 +46,7 @@ public class PocketFPSCommand {
                     return 1;
                 })
             )
-            
+
             .then(literal("throttler")
                 .then(ClientCommandManager.argument("enabled", BoolArgumentType.bool())
                     .executes(context -> {
@@ -64,7 +66,7 @@ public class PocketFPSCommand {
                     return 1;
                 })
             )
-            
+
             .then(literal("redstone")
                 .then(ClientCommandManager.argument("enabled", BoolArgumentType.bool())
                     .executes(context -> {
@@ -84,7 +86,7 @@ public class PocketFPSCommand {
                     return 1;
                 })
             )
-            
+
             .then(literal("entity")
                 .then(ClientCommandManager.argument("enabled", BoolArgumentType.bool())
                     .executes(context -> {
@@ -104,18 +106,38 @@ public class PocketFPSCommand {
                     return 1;
                 })
             )
-            
+
+            .then(literal("particle")
+                .then(ClientCommandManager.argument("enabled", BoolArgumentType.bool())
+                    .executes(context -> {
+                        boolean enabled = BoolArgumentType.getBool(context, "enabled");
+                        setParticleThrottlerEnabled(enabled);
+                        context.getSource().sendFeedback(new LiteralText(
+                            "§6粒子节流: " + (enabled ? "§a已开启" : "§c已关闭")
+                        ));
+                        return 1;
+                    })
+                )
+                .executes(context -> {
+                    context.getSource().sendFeedback(new LiteralText(
+                        "§6粒子节流: " + (particleThrottlerEnabled ? "§a已开启" : "§c已关闭") + "\n" +
+                        "§7用法: /pocketfps particle <true/false>"
+                    ));
+                    return 1;
+                })
+            )
+
             .then(literal("reset")
                 .executes(context -> {
                     resetAll();
                     context.getSource().sendFeedback(new LiteralText(
                         "§a✅ 所有功能已重置为默认状态\n" +
-                        "§7帧预测: 开启 | 区块节流: 开启 | 红石限制: 开启 | 实体冻结: 开启"
+                        "§7帧预测: 开启 | 区块节流: 开启 | 红石限制: 开启 | 实体冻结: 开启 | 粒子节流: 开启"
                     ));
                     return 1;
                 })
             )
-            
+
             .then(literal("status")
                 .executes(context -> {
                     sendStatus(context.getSource());
@@ -124,7 +146,7 @@ public class PocketFPSCommand {
             )
         );
     }
-    
+
     private static void sendStatus(FabricClientCommandSource source) {
         source.sendFeedback(new LiteralText(
             "§6=== PocketFPS 功能状态 ===\n" +
@@ -132,6 +154,7 @@ public class PocketFPSCommand {
             "§7区块更新节流 (throttler): " + (throttlerEnabled ? "§a✅ 开启" : "§c❌ 关闭") + "\n" +
             "§7红石限制 (redstone): " + (redstoneEnabled ? "§a✅ 开启" : "§c❌ 关闭") + "\n" +
             "§7实体冻结 (entity): " + (entityFreezeEnabled ? "§a✅ 开启" : "§c❌ 关闭") + "\n" +
+            "§7粒子节流 (particle): " + (particleThrottlerEnabled ? "§a✅ 开启" : "§c❌ 关闭") + "\n" +
             "§7─────────────────────\n" +
             "§7低功耗模式: " + (PerformanceTuner.isLowPowerMode() ? "§a开启" : "§c关闭") + "\n" +
             "§7当前 FPS: §e" + String.format("%.1f", PerformanceTuner.getSmoothedFps()) + "\n" +
@@ -139,11 +162,11 @@ public class PocketFPSCommand {
             "§7冻结实体数: §b" + EntityLODManager.getFrozenCount()
         ));
     }
-    
+
     public static void setPredictorEnabled(boolean enabled) {
         setPredictorEnabled(enabled, true);
     }
-    
+
     public static void setPredictorEnabled(boolean enabled, boolean save) {
         predictorEnabled = enabled;
         if (!enabled) {
@@ -154,11 +177,11 @@ public class PocketFPSCommand {
             ConfigManager.saveConfig();
         }
     }
-    
+
     public static void setThrottlerEnabled(boolean enabled) {
         setThrottlerEnabled(enabled, true);
     }
-    
+
     public static void setThrottlerEnabled(boolean enabled, boolean save) {
         throttlerEnabled = enabled;
         if (!enabled) {
@@ -169,26 +192,26 @@ public class PocketFPSCommand {
             ConfigManager.saveConfig();
         }
     }
-    
+
     public static void setRedstoneEnabled(boolean enabled) {
         setRedstoneEnabled(enabled, true);
     }
-    
+
     public static void setRedstoneEnabled(boolean enabled, boolean save) {
         redstoneEnabled = enabled;
         if (!enabled) {
-            RedstoneLimiterMixin.setRedstoneLimit(-1);
+            RedstoneHelper.setRedstoneLimit(-1);
         }
         if (save) {
             ConfigManager.get().redstoneEnabled = enabled;
             ConfigManager.saveConfig();
         }
     }
-    
+
     public static void setEntityFreezeEnabled(boolean enabled) {
         setEntityFreezeEnabled(enabled, true);
     }
-    
+
     public static void setEntityFreezeEnabled(boolean enabled, boolean save) {
         entityFreezeEnabled = enabled;
         if (!enabled) {
@@ -199,18 +222,35 @@ public class PocketFPSCommand {
             ConfigManager.saveConfig();
         }
     }
-    
+
+    public static void setParticleThrottlerEnabled(boolean enabled) {
+        setParticleThrottlerEnabled(enabled, true);
+    }
+
+    public static void setParticleThrottlerEnabled(boolean enabled, boolean save) {
+        particleThrottlerEnabled = enabled;
+        if (!enabled) {
+            ParticleThrottler.setEnabled(false);
+        }
+        if (save) {
+            ConfigManager.get().particleThrottlerEnabled = enabled;
+            ConfigManager.saveConfig();
+        }
+    }
+
     public static void resetAll() {
         setPredictorEnabled(true);
         setThrottlerEnabled(true);
         setRedstoneEnabled(true);
         setEntityFreezeEnabled(true);
+        setParticleThrottlerEnabled(true);
         PerformanceTuner.setLowPowerMode(false);
         PerformanceScheduler.restoreAll();
     }
-    
+
     public static boolean isPredictorEnabled() { return predictorEnabled; }
     public static boolean isThrottlerEnabled() { return throttlerEnabled; }
     public static boolean isRedstoneEnabled() { return redstoneEnabled; }
     public static boolean isEntityFreezeEnabled() { return entityFreezeEnabled; }
+    public static boolean isParticleThrottlerEnabled() { return particleThrottlerEnabled; }
 }

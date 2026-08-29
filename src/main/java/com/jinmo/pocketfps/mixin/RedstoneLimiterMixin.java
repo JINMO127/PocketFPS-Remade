@@ -1,8 +1,9 @@
-package com.jinmo.pocketfps.lod.mixin;
+package com.jinmo.pocketfps.mixin;
 
 import com.jinmo.pocketfps.PerformanceTuner;
 import com.jinmo.pocketfps.PocketFPSCommand;
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(World.class)  // Mojang 映射
+@Mixin(World.class)
 public class RedstoneLimiterMixin {
 
     @Unique
@@ -19,12 +20,18 @@ public class RedstoneLimiterMixin {
 
     @Inject(method = "updateNeighborsAlways", at = @At("HEAD"), cancellable = true)
     private void onUpdateNeighbors(BlockPos pos, Block sourceBlock, CallbackInfo ci) {
-        // 方法体为空，功能关闭
+        // 功能暂时禁用，避免 Mixin 报错
+        // TODO: 后续版本恢复红石限制功能
     }
 
-    public static class Api {
-        public static void setRedstoneLimit(int distance) {
-            // 什么都不做
-        }
+    @Unique
+    private static void setMaxDistance(int distance) {
+        maxDistance = distance;
+    }
+
+    @Unique
+    private static void setRedstoneLimit(int distance) {
+        // 功能暂时禁用，避免 Mixin 报错
+        // TODO: 后续版本恢复红石限制功能
     }
 }

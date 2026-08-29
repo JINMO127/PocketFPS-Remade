@@ -1,4 +1,4 @@
-package com.jinmo.pocketfps.lod.mixin;
+package com.jinmo.pocketfps.mixin;
 
 import com.jinmo.pocketfps.PerformanceTuner;
 import com.jinmo.pocketfps.PocketFPSCommand;

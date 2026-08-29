@@ -13,11 +13,15 @@ public class PathMerger {
     private static final Map<UUID, Long> lastUpdateTick = new HashMap<>();
     private static final Map<UUID, Vec3d> cachedOffset = new HashMap<>();
     private static int cleanupCounter = 0;
+    private static int globalTickCounter = 0;
 
     public static void mergePathIfNeeded(MobEntity mob) {
         if (mob == null || mob.world == null || !mob.isAlive()) return;
         if (!PerformanceTuner.isLowPowerMode()) return;
         if (EntityLODManager.isFrozen(mob)) return;
+
+        globalTickCounter++;
+        if (globalTickCounter % 5 != 0) return;
 
         LivingEntity target = mob.getTarget();
         if (target == null) return;
@@ -36,7 +40,7 @@ public class PathMerger {
             }
         }
 
-        // ✅ 只改这里：同种类型检查，不再限定僵尸
+        // 同种类型检查
         if (!mobs.isEmpty()) {
             MobEntity first = mobs.get(0);
             if (first == null) return;
@@ -89,7 +93,7 @@ public class PathMerger {
         if (targetUuid != null) {
             List<MobEntity> mobs = targetMap.get(targetUuid);
             if (mobs != null) {
-                mobs.remove(mob);
+                mobs.removeIf(m -> m == null || !m.isAlive() || m.removed);
                 if (mobs.isEmpty()) {
                     targetMap.remove(targetUuid);
                 }

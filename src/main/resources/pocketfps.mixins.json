@@ -1,12 +1,16 @@
 {
   "required": true,
-  "package": "com.jinmo.pocketfps",
+  "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
+  "package": "com.jinmo.pocketfps.mixin",
+  "mixins": [
+    "RedstoneLimiterMixin",
+    "EntityAIBlockerMixin",
+    "ChunkUpdateThrottlerMixin",
+    "ParticleThrottlerMixin"
+  ],
   "client": [
-    "gpu.mixin.FramePredictorMixin",
-    "lod.mixin.EntityAIBlockerMixin",
-    "lod.mixin.ChunkUpdateThrottlerMixin",
-    "lod.mixin.RedstoneLimiterMixin"
+    "FramePredictorMixin"
   ],
   "injectors": {
     "defaultRequire": 1
