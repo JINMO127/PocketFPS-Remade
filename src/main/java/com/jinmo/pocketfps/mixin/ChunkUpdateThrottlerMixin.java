@@ -26,7 +26,7 @@ public class ChunkUpdateThrottlerMixin {
     @Inject(method = "markBlockForRenderUpdate", at = @At("HEAD"), cancellable = true)
     private void onMarkBlockForRenderUpdate(BlockPos pos, CallbackInfo ci) {
         if (!PerformanceTuner.isLowPowerMode() || throttleRate <= 1) return;
-        // ✅ 检查区块更新节流是否启用
+        // ✅ 检查区块更��节流是否启用
         if (!PocketFPSCommand.isThrottlerEnabled()) return;
         
         MinecraftClient client = MinecraftClient.getInstance();
