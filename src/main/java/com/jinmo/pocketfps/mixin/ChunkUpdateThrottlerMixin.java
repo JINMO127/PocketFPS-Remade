@@ -17,19 +17,26 @@ public class ChunkUpdateThrottlerMixin {
     @Unique
     private static int throttleRate = 1;
     
-    @Inject(method = "scheduleChunkRender", at = @At("HEAD"), cancellable = true)
-    private void onScheduleChunkRender(int chunkX, int chunkZ, boolean important, CallbackInfo ci) {
+    /**
+     * ✅ 修复：使用官方 Yarn 1.16.5 中真实存在的方法 markBlockForRenderUpdate
+     * 而不是不存在的 scheduleChunkRender
+     * 
+     * 该方法在方块更新时被调用，用于标记需要重新渲染的方块
+     */
+    @Inject(method = "markBlockForRenderUpdate", at = @At("HEAD"), cancellable = true)
+    private void onMarkBlockForRenderUpdate(BlockPos pos, CallbackInfo ci) {
         if (!PerformanceTuner.isLowPowerMode() || throttleRate <= 1) return;
-        // ✅ 新增：检查区块更新节流是否启用
+        // ✅ 检查区块更新节流是否启用
         if (!PocketFPSCommand.isThrottlerEnabled()) return;
         
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null || client.player == null) return;
         
         BlockPos playerPos = client.player.getBlockPos();
-        int dx = Math.abs((chunkX << 4) - playerPos.getX());
-        int dz = Math.abs((chunkZ << 4) - playerPos.getZ());
-        int distance = Math.max(dx, dz);
+        int dx = Math.abs(pos.getX() - playerPos.getX());
+        int dy = Math.abs(pos.getY() - playerPos.getY());
+        int dz = Math.abs(pos.getZ() - playerPos.getZ());
+        int distance = Math.max(Math.max(dx, dy), dz);
         
         int rate;
         if (distance < 32) {
@@ -43,7 +50,7 @@ public class ChunkUpdateThrottlerMixin {
         if (rate <= 1) return;
         
         long gameTime = client.world.getTime();
-        long seed = Math.abs(chunkX * 7L + chunkZ * 13L);
+        long seed = Math.abs(pos.getX() * 7L + pos.getY() * 11L + pos.getZ() * 13L);
         if ((gameTime + seed) % rate != 0) {
             ci.cancel();
         }
